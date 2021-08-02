@@ -3,6 +3,7 @@ package twitter
 import (
 	"context"
 	"fmt"
+
 	"github.com/desmos-labs/desmostipbot/tipper"
 	"github.com/desmos-labs/desmostipbot/types"
 	"github.com/desmos-labs/desmostipbot/utils"

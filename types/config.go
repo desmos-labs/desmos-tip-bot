@@ -1,8 +1,9 @@
 package types
 
 import (
-	"github.com/pelletier/go-toml"
 	"io/ioutil"
+
+	"github.com/pelletier/go-toml"
 )
 
 // ParseConfig parses the contents of the file at the given path as a Config instance

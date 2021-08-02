@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/desmos-labs/desmostipbot/cosmos"
-	"github.com/desmos-labs/desmostipbot/tipper"
-	"github.com/desmos-labs/desmostipbot/twitter"
-	"github.com/desmos-labs/desmostipbot/types"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/desmos-labs/desmostipbot/cosmos"
+	"github.com/desmos-labs/desmostipbot/tipper"
+	"github.com/desmos-labs/desmostipbot/twitter"
+	"github.com/desmos-labs/desmostipbot/types"
 )
 
 func main() {
