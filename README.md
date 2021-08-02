@@ -4,3 +4,18 @@ This repository contains the code for the Desmos Tip Bot, the bot that allows yo
 ## Supported platforms
 Currently, we support the following platforms:
 - [Twitter](https://twitter.com)
+
+## Configuration
+```toml
+[chain]
+node_uri = ""
+mnemonic = ""
+chain_id = ""
+fees = ""
+
+[twitter]
+consumer_key = ""
+consumer_secret = ""
+access_token = ""
+access_secret = ""
+```
