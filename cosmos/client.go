@@ -63,7 +63,7 @@ func NewClient(chainCfg *types.ChainConfig) (*Client, error) {
 	}, nil
 }
 
-// AccAddress returns the address of the account that is going to be used to sign the transactions
-func (client *Client) AccAddress() string {
-	return sdk.AccAddress(client.privKey.PubKey().Address()).String()
+// GetAccAddress returns the address of the account that is going to be used to sign the transactions
+func (client *Client) GetAccAddress() sdk.AccAddress {
+	return sdk.AccAddress(client.privKey.PubKey().Address())
 }

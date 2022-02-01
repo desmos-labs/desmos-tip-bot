@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	DesmosTipRegEx = regexp.MustCompile("^@desmostipbot !tip [0-9]+ \\S*")
+	DesmosTipRegEx = regexp.MustCompile("^@desmostipbot tip [0-9]+ \\S*")
 )
 
 func TipSentMessage(txHash string) string {

@@ -26,10 +26,28 @@ func ParseConfig(filePath string) (*Config, error) {
 
 // Config contains the data used to configure the bot
 type Config struct {
-	Chain   *ChainConfig   `toml:"chain"`
-	Twitter *TwitterConfig `toml:"twitter"`
+	Chain    *ChainConfig    `toml:"chain"`
+	Database *DatabaseConfig `toml:"database"`
+	Twitter  *TwitterConfig  `toml:"twitter"`
+	APIs     *APIsConfig     `toml:"apis"`
 }
 
+type APIsConfig struct {
+	Streamlabs *StreamlabsConfig `toml:"streamlabs"`
+}
+
+type StreamlabsConfig struct {
+	ClientID     string `toml:"client_id"`
+	ClientSecret string `toml:"client_secret"`
+	RedirectURI  string `toml:"redirect_uri"`
+}
+
+// DatabaseConfig contains the configuration data to connect to a PostgreSQL database
+type DatabaseConfig struct {
+	URI string `toml:"uri"`
+}
+
+// ChainConfig contains the configuration data of the chain for which the tipper will run
 type ChainConfig struct {
 	NodeURI  string `toml:"node_uri"`
 	ChainID  string `toml:"chain_id"`

@@ -72,14 +72,19 @@ func (client *Client) handleMention(tweet *twitter.Tweet) {
 		return
 	}
 
-	amount, user, err := utils.ParseText(tweet.Text)
+	// Get the sender account
+	sender := types.NewAppAccount(types.AppTwitter, tweet.User.Name)
+
+	// Get the amount and recipient account
+	amount, recipientName, err := ParseText(tweet.Text)
 	if err != nil {
 		client.answerWithError(err, tweet)
 		return
 	}
+	recipient := types.NewAppAccount(types.AppTwitter, recipientName)
 
 	// Send the tip
-	txHash, err := client.tipper.Tip(amount, user)
+	txHash, err := client.tipper.Tip(sender, recipient, amount)
 	if err != nil {
 		client.answerWithError(err, tweet)
 	}
