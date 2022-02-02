@@ -3,7 +3,9 @@ package types
 import (
 	"io/ioutil"
 
-	"github.com/pelletier/go-toml"
+	"gopkg.in/yaml.v3"
+
+	cosmoswallettypes "github.com/desmos-labs/cosmos-go-wallet/types"
 )
 
 // ParseConfig parses the contents of the file at the given path as a Config instance
@@ -14,7 +16,7 @@ func ParseConfig(filePath string) (*Config, error) {
 	}
 
 	var cfg Config
-	err = toml.Unmarshal(bz, &cfg)
+	err = yaml.Unmarshal(bz, &cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -26,39 +28,50 @@ func ParseConfig(filePath string) (*Config, error) {
 
 // Config contains the data used to configure the bot
 type Config struct {
-	Chain    *ChainConfig    `toml:"chain"`
-	Database *DatabaseConfig `toml:"database"`
-	Twitter  *TwitterConfig  `toml:"twitter"`
-	APIs     *APIsConfig     `toml:"apis"`
+	Chain        *ChainConfig                     `yaml:"chain"`
+	Account      *cosmoswallettypes.AccountConfig `yaml:"account"`
+	Database     *DatabaseConfig                  `yaml:"database"`
+	APIs         *APIsConfig                      `yaml:"apis"`
+	Integrations *IntegrationsConfig              `yaml:"integrations"`
 }
 
+type ChainConfig struct {
+	*cosmoswallettypes.ChainConfig `yaml:"-,inline"`
+	*DesmosClientConfig            `yaml:"-,inline"`
+}
+
+// DesmosClientConfig represents the configuration for a DesmosClient instance
+type DesmosClientConfig struct {
+	GraphQLAddr string `yaml:"gql_addr"`
+}
+
+// APIsConfig contains the configuration for the REST APIs provided by the bot
 type APIsConfig struct {
-	Streamlabs *StreamlabsConfig `toml:"streamlabs"`
+	Port uint64 `yaml:"port"`
 }
 
+// IntegrationsConfig contains the configuration for the various integrations
+type IntegrationsConfig struct {
+	Streamlabs *StreamlabsConfig `yaml:"streamlabs"`
+	Twitter    *TwitterConfig    `yaml:"twitter"`
+}
+
+// StreamlabsConfig contains the configuration data to integrate the bot with Streamlabs
 type StreamlabsConfig struct {
-	ClientID     string `toml:"client_id"`
-	ClientSecret string `toml:"client_secret"`
-	RedirectURI  string `toml:"redirect_uri"`
+	ClientID     string `yaml:"client_id"`
+	ClientSecret string `yaml:"client_secret"`
+	RedirectURI  string `yaml:"redirect_uri"`
 }
 
 // DatabaseConfig contains the configuration data to connect to a PostgreSQL database
 type DatabaseConfig struct {
-	URI string `toml:"uri"`
-}
-
-// ChainConfig contains the configuration data of the chain for which the tipper will run
-type ChainConfig struct {
-	NodeURI  string `toml:"node_uri"`
-	ChainID  string `toml:"chain_id"`
-	Mnemonic string `toml:"mnemonic"`
-	Fees     string `toml:"fees"`
+	URI string `yaml:"uri"`
 }
 
 // TwitterConfig contains all the data used to configure the Twitter integration
 type TwitterConfig struct {
-	ConsumerKey    string `toml:"consumer_key"`
-	ConsumerSecret string `toml:"consumer_secret"`
-	AccessToken    string `toml:"access_token"`
-	AccessSecret   string `toml:"access_secret"`
+	ConsumerKey    string `yaml:"consumer_key"`
+	ConsumerSecret string `yaml:"consumer_secret"`
+	AccessToken    string `yaml:"access_token"`
+	AccessSecret   string `yaml:"access_secret"`
 }

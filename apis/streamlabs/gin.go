@@ -2,10 +2,11 @@ package streamlabs
 
 import (
 	"encoding/json"
-	apiutils "github.com/desmos-labs/desmostipbot/apis/utils"
-	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net/http"
+
+	apiutils "github.com/desmos-labs/desmostipbot/apis/utils"
+	"github.com/gin-gonic/gin"
 )
 
 // tokenRequestBody represents the request body that must be used to get an authorization token

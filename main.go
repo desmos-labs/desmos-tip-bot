@@ -2,19 +2,26 @@ package main
 
 import (
 	"fmt"
-	"github.com/desmos-labs/desmostipbot/apis/streamlabs"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	cosmosclient "github.com/desmos-labs/cosmos-go-wallet/client"
+	cosmoswallet "github.com/desmos-labs/cosmos-go-wallet/wallet"
+	"github.com/desmos-labs/desmostipbot/apis/donations"
+	"github.com/desmos-labs/desmostipbot/apis/streamlabs"
+	streamlabsclient "github.com/desmos-labs/desmostipbot/integrations/streamlabs"
+	"github.com/desmos-labs/desmostipbot/integrations/twitter"
+	notificationshandler "github.com/desmos-labs/desmostipbot/notifications/handler"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+
 	"github.com/desmos-labs/desmostipbot/database"
 
-	"github.com/desmos-labs/desmostipbot/cosmos"
-	"github.com/desmos-labs/desmostipbot/tipper"
-	"github.com/desmos-labs/desmostipbot/twitter"
+	desmosapp "github.com/desmos-labs/desmos/v2/app"
+	"github.com/desmos-labs/desmostipbot/client"
 	"github.com/desmos-labs/desmostipbot/types"
 )
 
@@ -35,21 +42,23 @@ func main() {
 		panic(err)
 	}
 
-	// Build the Cosmos client
-	cosmosClient, err := cosmos.NewClient(cfg.Chain)
+	// Setup the configurations
+	desmosapp.SetupConfig(sdk.GetConfig())
+
+	// Build the various clients
+	wallet, err := buildWallet(cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	// Build the tipper instance
-	tipperClient := tipper.NewTipper(cosmosClient, db)
+	// Build the Desmos client
+	desmosClient := client.NewDesmosClient(cfg.Chain.DesmosClientConfig, wallet, db)
+	streamlabsClient := streamlabsclient.NewClient(cfg.Integrations.Streamlabs, db)
+	twitterClient := twitter.NewClient(cfg.Integrations.Twitter)
 
-	// Setup the Twitter client
-	twitterClient := twitter.NewClient(cfg.Twitter, tipperClient)
-	err = twitterClient.StartListening()
-	if err != nil {
-		panic(err)
-	}
+	notificationsClient := notificationshandler.NewNotificationsHandler().
+		RegisterClient(streamlabsClient).
+		RegisterClient(twitterClient)
 
 	// Setup the rest server
 	r := gin.Default()
@@ -61,14 +70,21 @@ func main() {
 	r.Use(cors.New(ginCfg))
 
 	// Register the handlers
-	streamlabs.RegisterHandlers(r, streamlabs.NewHandler(cfg.APIs.Streamlabs, db))
+	donations.RegisterHandlers(r, donations.NewHandler(desmosClient, notificationsClient))
+	streamlabs.RegisterHandlers(r, streamlabs.NewHandler(streamlabsClient))
 
 	// Run the server
-	//port := cfg.API.Port
-	//if port == 0 {
-	//	port = 8080
-	//}
-	r.Run(fmt.Sprintf(":%d", 5000))
+	port := cfg.APIs.Port
+	if port == 0 {
+		port = 8080
+	}
+	r.Run(fmt.Sprintf(":%d", port))
+
+	// Setup the Twitter client
+	err = twitterClient.StartListening()
+	if err != nil {
+		panic(err)
+	}
 
 	// Listen for os signals and stop the clients
 	ch := make(chan os.Signal)
@@ -76,4 +92,17 @@ func main() {
 	log.Println(<-ch)
 
 	twitterClient.Stop()
+}
+
+func buildWallet(cfg *types.Config) (*cosmoswallet.Wallet, error) {
+	encodingConfig := desmosapp.MakeTestEncodingConfig()
+
+	// Build the Cosmos client
+	cosmosClient, err := cosmosclient.NewClient(cfg.Chain.ChainConfig, encodingConfig.Marshaler)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build the Cosmos wallet
+	return cosmoswallet.NewWallet(cfg.Account, cosmosClient, encodingConfig.TxConfig)
 }

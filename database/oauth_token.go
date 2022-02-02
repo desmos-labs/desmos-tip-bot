@@ -1,16 +1,17 @@
 package database
 
 import (
-	"github.com/desmos-labs/desmostipbot/types"
 	"time"
+
+	"github.com/desmos-labs/desmostipbot/types"
 )
 
 type oAuthTokenRow struct {
-	DesmosAddress string `db:"desmos_address"`
-	Service       string `db:"service"`
-	AccessToken   string `db:"access_token"`
-	RefreshToken  string `db:"refresh_token"`
-	CreationTime  time.Time
+	DesmosAddress string    `db:"desmos_address"`
+	Service       string    `db:"service"`
+	AccessToken   string    `db:"access_token"`
+	RefreshToken  string    `db:"refresh_token"`
+	CreationTime  time.Time `db:"creation_time"`
 }
 
 // SaveOAuthToken stores the given OAuth token inside the database

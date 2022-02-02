@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/desmos-labs/desmostipbot/tipper"
+	"github.com/desmos-labs/desmostipbot/client"
 	"github.com/desmos-labs/desmostipbot/types"
 	"github.com/desmos-labs/desmostipbot/utils"
 	"github.com/dghubble/go-twitter/twitter"
@@ -18,19 +18,17 @@ type Client struct {
 	demux   twitter.Demux
 	stream  *twitter.Stream
 
-	tipper *tipper.Tipper
+	tipper *client.DesmosClient
 }
 
 // NewClient allows to build a new Client instance
-func NewClient(cfg *types.TwitterConfig, tipper *tipper.Tipper) *Client {
+func NewClient(cfg *types.TwitterConfig) *Client {
 	// Build the Oauth 1.0 client that is needed for the streaming APIs
 	config := oauth1.NewConfig(cfg.ConsumerKey, cfg.ConsumerSecret)
 	token := oauth1.NewToken(cfg.AccessToken, cfg.AccessSecret)
 
 	// Create the client
-	client := &Client{
-		tipper: tipper,
-	}
+	client := &Client{}
 
 	// Setup the Twitter client
 	httpClient := config.Client(context.Background(), token)
@@ -72,24 +70,24 @@ func (client *Client) handleMention(tweet *twitter.Tweet) {
 		return
 	}
 
-	// Get the sender account
-	sender := types.NewAppAccount(types.AppTwitter, tweet.User.Name)
-
-	// Get the amount and recipient account
-	amount, recipientName, err := ParseText(tweet.Text)
-	if err != nil {
-		client.answerWithError(err, tweet)
-		return
-	}
-	recipient := types.NewAppAccount(types.AppTwitter, recipientName)
+	//// Get the sender account
+	//sender := types.NewAppAccount(types.AppTwitter, tweet.User.Name)
+	//
+	//// Get the amount and recipient account
+	//amount, recipientName, err := ParseText(tweet.Text)
+	//if err != nil {
+	//	client.answerWithError(err, tweet)
+	//	return
+	//}
+	//recipient := types.NewAppAccount(types.AppTwitter, recipientName)
 
 	// Send the tip
-	txHash, err := client.tipper.Tip(sender, recipient, amount)
-	if err != nil {
-		client.answerWithError(err, tweet)
-	}
+	//txHash, err := client.tipper.Tip(sender, recipient, amount)
+	//if err != nil {
+	//	client.answerWithError(err, tweet)
+	//}
 
-	client.answerTweet(types.TipSentMessage(txHash), tweet)
+	//client.answerTweet(types.TipSentMessage(txHash), tweet)
 }
 
 // answerWithError answers the tweet having the given tweet id with the specified error
