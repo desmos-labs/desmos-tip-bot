@@ -1,4 +1,4 @@
-module github.com/desmos-labs/desmostipbot
+module github.com/desmos-labs/plutus
 
 go 1.17
 

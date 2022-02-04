@@ -3,18 +3,18 @@ package handler
 import (
 	"strings"
 
-	"github.com/desmos-labs/desmostipbot/notifications"
-)
+	"github.com/desmos-labs/plutus/types"
 
-var _ notifications.Client = &NotificationsHandler{}
+	"github.com/desmos-labs/plutus/notifications"
+)
 
 // NotificationsHandler allows handling notifications by calling the proper client
 type NotificationsHandler struct {
 	clients []notifications.Client
 }
 
-// NewNotificationsHandler returns a new NotificationsHandler
-func NewNotificationsHandler() *NotificationsHandler {
+// NewHandler returns a new NotificationsHandler
+func NewHandler() *NotificationsHandler {
 	return &NotificationsHandler{}
 }
 
@@ -30,7 +30,7 @@ func (n *NotificationsHandler) HandledPlatform() string {
 }
 
 // SendNotification implements notifications.Client
-func (n *NotificationsHandler) SendNotification(data *notifications.Data) error {
+func (n *NotificationsHandler) SendNotification(data *types.Notification) error {
 	for _, client := range n.clients {
 		if strings.EqualFold(client.HandledPlatform(), data.Platform) {
 			err := client.SendNotification(data)

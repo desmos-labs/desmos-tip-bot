@@ -5,8 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	apiutils "github.com/desmos-labs/desmostipbot/apis/utils"
 	"github.com/gin-gonic/gin"
+
+	apiutils "github.com/desmos-labs/plutus/apis/utils"
 )
 
 type DonationRequest struct {

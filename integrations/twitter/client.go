@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/desmos-labs/desmostipbot/client"
-	"github.com/desmos-labs/desmostipbot/types"
-	"github.com/desmos-labs/desmostipbot/utils"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"github.com/rs/zerolog/log"
+
+	"github.com/desmos-labs/plutus/desmos"
+	"github.com/desmos-labs/plutus/types"
+	"github.com/desmos-labs/plutus/utils"
 )
 
 // Client represents the Twitter API client
@@ -18,7 +19,7 @@ type Client struct {
 	demux   twitter.Demux
 	stream  *twitter.Stream
 
-	tipper *client.DesmosClient
+	tipper *desmos.Client
 }
 
 // NewClient allows to build a new Client instance

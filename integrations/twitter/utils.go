@@ -4,7 +4,8 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/desmos-labs/desmostipbot/types"
+
+	"github.com/desmos-labs/plutus/types"
 )
 
 // ParseText parses the given text and returns the amount and user specified.

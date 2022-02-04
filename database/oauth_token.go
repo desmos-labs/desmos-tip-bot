@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"github.com/desmos-labs/desmostipbot/types"
+	"github.com/desmos-labs/plutus/types"
 )
 
 type oAuthTokenRow struct {

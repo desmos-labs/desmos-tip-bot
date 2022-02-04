@@ -2,21 +2,23 @@ package donations
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/desmos-labs/desmostipbot/client"
-	"github.com/desmos-labs/desmostipbot/notifications"
+
+	"github.com/desmos-labs/plutus/desmos"
+	"github.com/desmos-labs/plutus/notifications/handler"
+	"github.com/desmos-labs/plutus/types"
 )
 
 // Handler allows to handle the requests related to the donations
 type Handler struct {
-	desmosClient        *client.DesmosClient
-	notificationsClient notifications.Client
+	desmosClient         *desmos.Client
+	notificationsHandler *handler.NotificationsHandler
 }
 
 // NewHandler returns a new Handler instance
-func NewHandler(client *client.DesmosClient, notificationsClient notifications.Client) *Handler {
+func NewHandler(client *desmos.Client, notificationsHandler *handler.NotificationsHandler) *Handler {
 	return &Handler{
-		desmosClient:        client,
-		notificationsClient: notificationsClient,
+		desmosClient:         client,
+		notificationsHandler: notificationsHandler,
 	}
 }
 
@@ -46,7 +48,7 @@ func (h *Handler) HandleDonationRequest(request DonationRequest) (txHash string,
 	}
 
 	// Send the notification to the recipient
-	err = h.notificationsClient.SendNotification(notifications.NewData(
+	err = h.notificationsHandler.SendNotification(types.NewNotification(
 		request.Platform,
 		request.Username,
 		recipientAddress.String(),

@@ -1,7 +1,7 @@
-package notifications
+package types
 
-// Data contains all the data that might be needed in order to send a notification
-type Data struct {
+// Notification contains all the data that might be needed in order to send a notification
+type Notification struct {
 	// Platform used to send the donation
 	Platform string
 
@@ -18,8 +18,9 @@ type Data struct {
 	TxHash string
 }
 
-func NewData(platform, username, desmosAddress, message, txHash string) *Data {
-	return &Data{
+// NewNotification returns a new Notification instance
+func NewNotification(platform, username, desmosAddress, message, txHash string) *Notification {
+	return &Notification{
 		Platform:      platform,
 		Username:      username,
 		DesmosAddress: desmosAddress,

@@ -1,4 +1,4 @@
-package client
+package desmos
 
 import (
 	"context"
@@ -10,11 +10,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	cosmoswallettypes "github.com/desmos-labs/cosmos-go-wallet/types"
-	apiutils "github.com/desmos-labs/desmostipbot/apis/utils"
+
+	apiutils "github.com/desmos-labs/plutus/apis/utils"
 )
 
 // SendTip allows to send a tip with the given amount from the tipper to the recipient
-func (client *DesmosClient) SendTip(tipper sdk.AccAddress, amount sdk.Coins, recipient sdk.AccAddress) (txHash string, err error) {
+func (client *Client) SendTip(tipper sdk.AccAddress, amount sdk.Coins, recipient sdk.AccAddress) (txHash string, err error) {
 	// Get the address of the grantee (the tip bot)
 	granteeAddr, err := client.ParseAddress(client.cosmosClient.AccAddress())
 	if err != nil {

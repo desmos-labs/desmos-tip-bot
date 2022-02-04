@@ -1,6 +1,9 @@
 package streamlabs
 
-import "github.com/desmos-labs/desmostipbot/notifications"
+import (
+	"github.com/desmos-labs/plutus/notifications"
+	"github.com/desmos-labs/plutus/types"
+)
 
 var _ notifications.Client = &Client{}
 
@@ -10,7 +13,7 @@ func (client *Client) HandledPlatform() string {
 }
 
 // SendNotification implements notifications.Client
-func (client *Client) SendNotification(data *notifications.Data) error {
+func (client *Client) SendNotification(data *types.Notification) error {
 	// Get the authorization token
 	token, err := client.db.GetOAuthToken(data.DesmosAddress)
 	if err != nil {

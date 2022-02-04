@@ -10,19 +10,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	cosmosclient "github.com/desmos-labs/cosmos-go-wallet/client"
 	cosmoswallet "github.com/desmos-labs/cosmos-go-wallet/wallet"
-	"github.com/desmos-labs/desmostipbot/apis/donations"
-	"github.com/desmos-labs/desmostipbot/apis/streamlabs"
-	streamlabsclient "github.com/desmos-labs/desmostipbot/integrations/streamlabs"
-	"github.com/desmos-labs/desmostipbot/integrations/twitter"
-	notificationshandler "github.com/desmos-labs/desmostipbot/notifications/handler"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	"github.com/desmos-labs/desmostipbot/database"
+	"github.com/desmos-labs/plutus/apis/donations"
+	"github.com/desmos-labs/plutus/apis/oauth"
+	streamlabsclient "github.com/desmos-labs/plutus/integrations/streamlabs"
+	"github.com/desmos-labs/plutus/integrations/twitter"
+	notificationshandler "github.com/desmos-labs/plutus/notifications/handler"
+	oauthhandler "github.com/desmos-labs/plutus/oauth/handler"
+
+	"github.com/desmos-labs/plutus/database"
 
 	desmosapp "github.com/desmos-labs/desmos/v2/app"
-	"github.com/desmos-labs/desmostipbot/client"
-	"github.com/desmos-labs/desmostipbot/types"
+
+	"github.com/desmos-labs/plutus/desmos"
+	"github.com/desmos-labs/plutus/types"
 )
 
 func main() {
@@ -52,11 +55,14 @@ func main() {
 	}
 
 	// Build the Desmos client
-	desmosClient := client.NewDesmosClient(cfg.Chain.DesmosClientConfig, wallet, db)
+	desmosClient := desmos.NewDesmosClient(cfg.Chain.DesmosClientConfig, wallet, db)
 	streamlabsClient := streamlabsclient.NewClient(cfg.Integrations.Streamlabs, db)
 	twitterClient := twitter.NewClient(cfg.Integrations.Twitter)
 
-	notificationsClient := notificationshandler.NewNotificationsHandler().
+	oAuthHandler := oauthhandler.NewHandler().
+		RegisterClient(streamlabsClient)
+
+	notificationsHandler := notificationshandler.NewHandler().
 		RegisterClient(streamlabsClient).
 		RegisterClient(twitterClient)
 
@@ -70,15 +76,15 @@ func main() {
 	r.Use(cors.New(ginCfg))
 
 	// Register the handlers
-	donations.RegisterHandlers(r, donations.NewHandler(desmosClient, notificationsClient))
-	streamlabs.RegisterHandlers(r, streamlabs.NewHandler(streamlabsClient))
+	donations.RegisterHandlers(r, donations.NewHandler(desmosClient, notificationsHandler))
+	oauth.RegisterHandlers(r, oauth.NewHandler(oAuthHandler, db))
 
 	// Run the server
 	port := cfg.APIs.Port
 	if port == 0 {
 		port = 8080
 	}
-	r.Run(fmt.Sprintf(":%d", port))
+	_ = r.Run(fmt.Sprintf(":%d", port))
 
 	// Setup the Twitter client
 	err = twitterClient.StartListening()

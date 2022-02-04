@@ -1,4 +1,4 @@
-package client
+package desmos
 
 import (
 	"context"
@@ -11,14 +11,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	cosmoswallet "github.com/desmos-labs/cosmos-go-wallet/wallet"
 	profilestypes "github.com/desmos-labs/desmos/v2/x/profiles/types"
-	apiutils "github.com/desmos-labs/desmostipbot/apis/utils"
-	"github.com/desmos-labs/desmostipbot/database"
-	"github.com/desmos-labs/desmostipbot/types"
 	"github.com/hasura/go-graphql-client"
+
+	apiutils "github.com/desmos-labs/plutus/apis/utils"
+	"github.com/desmos-labs/plutus/database"
+	"github.com/desmos-labs/plutus/types"
 )
 
-// DesmosClient represents the client used to interact with the Desmos chain
-type DesmosClient struct {
+// Client represents the client used to interact with the Desmos chain
+type Client struct {
 	database       *database.Database
 	cosmosClient   *cosmoswallet.Wallet
 	gqlClient      *graphql.Client
@@ -26,9 +27,9 @@ type DesmosClient struct {
 	profilesClient profilestypes.QueryClient
 }
 
-// NewDesmosClient allows to build a new DesmosClient instance
-func NewDesmosClient(cfg *types.DesmosClientConfig, cosmosClient *cosmoswallet.Wallet, database *database.Database) *DesmosClient {
-	return &DesmosClient{
+// NewDesmosClient allows to build a new Client instance
+func NewDesmosClient(cfg *types.DesmosClientConfig, cosmosClient *cosmoswallet.Wallet, database *database.Database) *Client {
+	return &Client{
 		database:       database,
 		cosmosClient:   cosmosClient,
 		gqlClient:      graphql.NewClient(cfg.GraphQLAddr, nil),
@@ -38,7 +39,7 @@ func NewDesmosClient(cfg *types.DesmosClientConfig, cosmosClient *cosmoswallet.W
 }
 
 // ParseAddress parses the given address as a sdk.AccAddress instance
-func (client *DesmosClient) ParseAddress(address string) (sdk.AccAddress, error) {
+func (client *Client) ParseAddress(address string) (sdk.AccAddress, error) {
 	return client.cosmosClient.Client.ParseAddress(address)
 }
 
@@ -46,7 +47,7 @@ func (client *DesmosClient) ParseAddress(address string) (sdk.AccAddress, error)
 // If the application is "desmos", then the provided username will be treated as a DTag.
 // Otherwise, the GraphQL client will be used to search for an application link with the specified
 // application and username case-insensitive.
-func (client *DesmosClient) SearchDesmosAddress(application, username string) (sdk.AccAddress, error) {
+func (client *Client) SearchDesmosAddress(application, username string) (sdk.AccAddress, error) {
 	if strings.EqualFold(application, "desmos") {
 		return client.getDesmosAddressFromDTag(username)
 	}
@@ -54,7 +55,7 @@ func (client *DesmosClient) SearchDesmosAddress(application, username string) (s
 }
 
 // getDesmosAddressFromDTag returns the Desmos address of the user that has the given DTag
-func (client *DesmosClient) getDesmosAddressFromDTag(dTag string) (sdk.AccAddress, error) {
+func (client *Client) getDesmosAddressFromDTag(dTag string) (sdk.AccAddress, error) {
 	res, err := client.profilesClient.Profile(context.Background(), &profilestypes.QueryProfileRequest{User: dTag})
 	if err != nil {
 		return nil, err
@@ -82,7 +83,7 @@ type profileByAppLinkQuery struct {
 }
 
 // getDesmosAddressFromApplication returns the Desmos address associated with the given application and username
-func (client *DesmosClient) getDesmosAddressFromApplication(application, username string) (sdk.AccAddress, error) {
+func (client *Client) getDesmosAddressFromApplication(application, username string) (sdk.AccAddress, error) {
 	var query profileByAppLinkQuery
 	variables := map[string]interface{}{
 		"application": graphql.String(application),
