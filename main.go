@@ -46,6 +46,7 @@ func main() {
 	}
 
 	// Setup the configurations
+	cdc, _ := desmosapp.MakeCodecs()
 	desmosapp.SetupConfig(sdk.GetConfig())
 
 	// Build the various clients
@@ -77,7 +78,7 @@ func main() {
 
 	// Register the handlers
 	donations.RegisterHandlers(r, donations.NewHandler(desmosClient, notificationsHandler))
-	oauth.RegisterHandlers(r, oauth.NewHandler(oAuthHandler, db))
+	oauth.RegisterHandlers(r, oauth.NewHandler(oAuthHandler, cdc, db))
 
 	// Run the server
 	port := cfg.APIs.Port
