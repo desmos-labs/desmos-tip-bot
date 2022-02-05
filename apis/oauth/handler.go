@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"encoding/hex"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -66,6 +67,23 @@ func (h *Handler) HandleAuthenticationTokenRequest(request TokenRequest) error {
 
 	if !pubkey.VerifySignature(msgBz, sigBz) {
 		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signature")
+	}
+
+	// Verify the signed value contains the OAuth code inside the memo field
+	var signDoc tx.SignDoc
+	err = h.cdc.Unmarshal(msgBz, &signDoc)
+	if err != nil {
+		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signed value. Must be SignDoc")
+	}
+
+	var txBody tx.TxBody
+	err = h.cdc.Unmarshal(signDoc.BodyBytes, &txBody)
+	if err != nil {
+		return apiutils.WrapErr(http.StatusBadRequest, "Invalid tx body bytes")
+	}
+
+	if txBody.Memo != request.OAuthCode {
+		return apiutils.WrapErr(http.StatusBadRequest, "Signed memo must be equals to OAuth code")
 	}
 
 	// Get the token
