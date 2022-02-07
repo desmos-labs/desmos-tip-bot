@@ -89,16 +89,20 @@ func (h *Handler) HandleAuthenticationTokenRequest(request TokenRequest) error {
 		return apiutils.WrapErr(http.StatusBadRequest, "Signed memo must be equals to OAuth code")
 	}
 
-	// Get the token
-	token, err := h.handler.GetAuthenticationToken(request.Platform, request.OAuthCode)
+	// Get the user account
+	user := types.NewUser(request.DesmosAddress)
+
+	// Get the service account
+	serviceAccount, err := h.handler.GetServiceAccount(request.Platform, request.OAuthCode)
 	if err != nil {
 		return err
 	}
 
+	// Get all the application accounts
 	var applications []*types.ApplicationAccount
 	for _, application := range types.SupportedApps {
 		// Get the application username
-		username, err := h.handler.GetApplicationUsername(request.Platform, application, token)
+		username, err := h.handler.GetApplicationUsername(request.Platform, application, serviceAccount)
 		if err != nil {
 			return err
 		}
@@ -112,8 +116,6 @@ func (h *Handler) HandleAuthenticationTokenRequest(request TokenRequest) error {
 		applications = append(applications, types.NewApplicationAccount(application, username))
 	}
 
-	// TODO: 1- Store the user, 2- Store the OAuth token, 3- Store the applications
-
 	// Store the token in the database
-	return h.db.SaveOAuthToken(token)
+	return h.db.SaveUserData(user, serviceAccount, applications)
 }

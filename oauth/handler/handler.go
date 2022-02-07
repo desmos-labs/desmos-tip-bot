@@ -30,11 +30,11 @@ func (h *OAuthHandler) Service() string {
 	return "none"
 }
 
-// GetAuthenticationToken implements oauth.Client
-func (h *OAuthHandler) GetAuthenticationToken(service, oAuthCode string) (*types.ServiceAccount, error) {
+// GetServiceAccount implements oauth.Client
+func (h *OAuthHandler) GetServiceAccount(service, oAuthCode string) (*types.ServiceAccount, error) {
 	for _, c := range h.clients {
 		if strings.EqualFold(c.Service(), service) {
-			return c.GetAuthenticationToken(oAuthCode)
+			return c.GetServiceAccount(oAuthCode)
 		}
 	}
 

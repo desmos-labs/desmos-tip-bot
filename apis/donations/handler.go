@@ -1,8 +1,7 @@
 package donations
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/desmos-labs/plutus/database"
 	"github.com/desmos-labs/plutus/desmos"
 	"github.com/desmos-labs/plutus/notifications/handler"
 	"github.com/desmos-labs/plutus/types"
@@ -10,51 +9,41 @@ import (
 
 // Handler allows to handle the requests related to the donations
 type Handler struct {
-	desmosClient         *desmos.Client
+	desmos *desmos.Client
+	db     *database.Database
+
 	notificationsHandler *handler.NotificationsHandler
 }
 
 // NewHandler returns a new Handler instance
-func NewHandler(client *desmos.Client, notificationsHandler *handler.NotificationsHandler) *Handler {
+func NewHandler(client *desmos.Client, notificationsHandler *handler.NotificationsHandler, db *database.Database) *Handler {
 	return &Handler{
-		desmosClient:         client,
+		desmos:               client,
+		db:                   db,
 		notificationsHandler: notificationsHandler,
 	}
 }
 
 // HandleDonationRequest handles the given request trying to perform the donation
-func (h *Handler) HandleDonationRequest(request DonationRequest) (txHash string, err error) {
-	// Get the tipper address
-	tipperAddress, err := h.desmosClient.ParseAddress(request.TipperAddress)
+func (h *Handler) HandleDonationRequest(request DonationRequest) error {
+	// Get the app account
+	appAccount, err := h.db.GetAppAccount(request.RecipientApplication, request.RecipientUsername)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	// Get the recipient address
-	recipientAddress, err := h.desmosClient.SearchDesmosAddress(request.Platform, request.Username)
-	if err != nil {
-		return "", err
+	if appAccount == nil {
+		// No app account to send the notification to
+		return nil
 	}
 
-	amount, err := sdk.ParseCoinsNormalized(request.Amount)
+	// Get the donation tx
+	donationTx, err := h.desmos.GetDonationDetails(request.TxHash)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	// Try sending the tip
-	txHash, err = h.desmosClient.SendTip(tipperAddress, amount, recipientAddress)
-	if err != nil {
-		return "", err
-	}
-
-	// Send the notification to the recipient
-	err = h.notificationsHandler.SendNotification(types.NewNotification(
-		request.Platform,
-		request.Username,
-		recipientAddress.String(),
-		request.DonationMessage,
-		txHash,
-	))
-
-	return txHash, err
+	// Send the notification
+	notification := types.NewNotification(appAccount, donationTx, request.TipperUsername, request.DonationMessage)
+	return h.notificationsHandler.SendNotification(notification)
 }

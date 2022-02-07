@@ -84,7 +84,7 @@ type tokenRequestResponse struct {
 }
 
 // GetAuthenticationToken implements Client
-func (client *Client) GetAuthenticationToken(oAuthCode string) (*types.ServiceAccount, error) {
+func (client *Client) GetServiceAccount(oAuthCode string) (*types.ServiceAccount, error) {
 	// Build the params values
 	params := url.Values{}
 	params.Add("client_id", client.clientID)

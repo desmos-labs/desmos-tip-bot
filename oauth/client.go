@@ -9,7 +9,7 @@ type Client interface {
 
 	// GetAuthenticationToken allows to get the first authorization token associated with
 	// the provided OAuth code
-	GetAuthenticationToken(oAuthCode string) (*types.ServiceAccount, error)
+	GetServiceAccount(oAuthCode string) (*types.ServiceAccount, error)
 
 	// GetApplicationUsername allows to get the username on the specified application for
 	// the user with the provided token

@@ -11,20 +11,19 @@ import (
 )
 
 type DonationRequest struct {
-	// TipperAddress represents the Desmos address of the tipper
-	TipperAddress string `json:"tipper_address"`
-
-	// Amount represents the amount to be tipped, serializes as a sdk.Coins instance
-	Amount string `json:"amount"`
+	// TipperUsername is the username the tipper has decided to show inside the donation
+	TipperUsername string `json:"tipper_username"`
 
 	// DonationMessage represents the message to be sent along with the donation
 	DonationMessage string `json:"donation_message"`
 
-	Platform string `json:"platform"`
-	Username string `json:"username"`
-}
+	// RecipientApplication is where the donation was made (Twitch, Twitter, etc)
+	RecipientApplication string `json:"application"`
 
-type DonationResponse struct {
+	// RecipientUsername is the recipient on the above specified application
+	RecipientUsername string `json:"username"`
+
+	// TxHash is the transaction hash used for the donation
 	TxHash string `json:"tx_hash"`
 }
 
@@ -44,15 +43,13 @@ func RegisterHandlers(r *gin.Engine, handler *Handler) {
 		}
 
 		// Perform the donation
-		txHash, err := handler.HandleDonationRequest(reqBody)
+		err = handler.HandleDonationRequest(reqBody)
 		if err != nil {
 			apiutils.HandleError(c, err)
 			return
 		}
 
 		// Send the response
-		c.JSON(http.StatusOK, &DonationResponse{
-			TxHash: txHash,
-		})
+		c.String(http.StatusOK, "Donation sent successfully")
 	})
 }

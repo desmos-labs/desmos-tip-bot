@@ -1,23 +1,25 @@
-CREATE TABLE user
+CREATE TABLE user_account
 (
-    id             SERIAL PRIMARY,
-    desmos_address TEXT NOT NULL UNIQUE,
+    id             SERIAL NOT NULL PRIMARY KEY,
+    desmos_address TEXT   NOT NULL,
+    CONSTRAINT unique_user_account UNIQUE (desmos_address)
 );
 
 CREATE TABLE service_account
 (
-    user_id       BIGINT NOT NULL REFERENCES user (id),
-    service       TEXT   NOT NULL,
-    access_token  TEXT   NOT NULL,
-    refresh_token TEXT   NOT NULL,
+    id            SERIAL                      NOT NULL PRIMARY KEY,
+    user_id       BIGINT                      NOT NULL REFERENCES user_account (id),
+    service       TEXT                        NOT NULL,
+    access_token  TEXT                        NOT NULL,
+    refresh_token TEXT                        NOT NULL,
     creation_time TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    CONSTRAINT single_oauth_token UNIQUE (service, user_id)
+    CONSTRAINT unique_service_account UNIQUE (service, user_id)
 );
 
 CREATE TABLE application_account
 (
-    oauth_token_id BIGINT NOT NULL REFERENCES oauth_token (id),
-    application    TEXT   NOT NULL,
-    username       TEXT   NOT NULL,
-    CONSTRAINT unique_username UNIQUE (application, username)
+    service_account_id BIGINT NOT NULL REFERENCES service_account (id),
+    application        TEXT   NOT NULL,
+    username           TEXT   NOT NULL,
+    CONSTRAINT unique_application_account UNIQUE (application, username)
 );

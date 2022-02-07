@@ -32,7 +32,7 @@ func (n *NotificationsHandler) HandledPlatform() string {
 // SendNotification implements notifications.Client
 func (n *NotificationsHandler) SendNotification(data *types.Notification) error {
 	for _, client := range n.clients {
-		if strings.EqualFold(client.HandledPlatform(), data.Platform) {
+		if strings.EqualFold(client.HandledPlatform(), data.RecipientAppAccount.Application) {
 			err := client.SendNotification(data)
 			if err != nil {
 				return err
