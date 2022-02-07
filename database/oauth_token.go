@@ -8,6 +8,7 @@ import (
 
 type oAuthTokenRow struct {
 	DesmosAddress string    `db:"desmos_address"`
+	Username      string    `db:"username"`
 	Service       string    `db:"service"`
 	AccessToken   string    `db:"access_token"`
 	RefreshToken  string    `db:"refresh_token"`
@@ -15,10 +16,10 @@ type oAuthTokenRow struct {
 }
 
 // SaveOAuthToken stores the given OAuth token inside the database
-func (db *Database) SaveOAuthToken(token *types.OAuthToken) error {
+func (db *Database) SaveOAuthToken(token *types.ServiceAccount) error {
 	stmt := `
-INSERT INTO oauth_token (service, desmos_address, access_token, refresh_token, creation_time)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO oauth_token (service, username, desmos_address, access_token, refresh_token, creation_time)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT ON CONSTRAINT single_oauth_token DO UPDATE 
     SET access_token = excluded.access_token,
     	refresh_token = excluded.refresh_token,
@@ -28,7 +29,7 @@ ON CONFLICT ON CONSTRAINT single_oauth_token DO UPDATE
 }
 
 // GetOAuthToken returns the OAuth token associated with the given Desmos address
-func (db *Database) GetOAuthToken(desmosAddress string) (*types.OAuthToken, error) {
+func (db *Database) GetOAuthToken(desmosAddress string) (*types.ServiceAccount, error) {
 	stmt := `SELECT * FROM oauth_token WHERE desmos_address = $1 ORDER BY creation_time DESC LIMIT 1`
 
 	var rows []oAuthTokenRow
@@ -42,9 +43,10 @@ func (db *Database) GetOAuthToken(desmosAddress string) (*types.OAuthToken, erro
 		return nil, nil
 	}
 
-	return types.NewOAuthToken(
+	return types.NewServiceAccount(
 		rows[1].DesmosAddress,
 		rows[1].Service,
+		rows[1].Username,
 		rows[1].AccessToken,
 		rows[1].RefreshToken,
 	), nil

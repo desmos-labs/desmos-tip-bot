@@ -16,15 +16,75 @@ func (client *Client) Service() string {
 	return "Streamlabs"
 }
 
+type badRequestResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message"`
+}
+
+// getBadRequestError returns the error to be returned if the given response has returned status 400
+func (client *Client) getBadRequestError(res *http.Response) error {
+	if res.StatusCode != http.StatusBadRequest {
+		return nil
+	}
+
+	var body badRequestResponse
+	err := json.NewDecoder(res.Body).Decode(&body)
+	if err != nil {
+		return err
+	}
+
+	return fmt.Errorf("%s-%s", body.Error, body.Message)
+}
+
+// applicationData contains the data of a single application connected to Streamlabs
+type applicationData struct {
+	Name string `json:"name"`
+}
+
+// GetApplicationUsername implements Client
+func (client *Client) GetApplicationUsername(application string, token *types.ServiceAccount) (string, error) {
+	req, err := http.NewRequest("GET", "https://streamlabs.com/api/v1.0/user", nil)
+	if err != nil {
+		return "", err
+	}
+
+	q := req.URL.Query()
+	q.Add("access_token", token.AccessToken)
+	req.URL.RawQuery = q.Encode()
+
+	res, err := client.http.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	err = client.getBadRequestError(res)
+	if err != nil {
+		return "", err
+	}
+
+	var resBody map[string]applicationData
+	err = json.NewDecoder(res.Body).Decode(&resBody)
+	if err != nil {
+		return "", err
+	}
+
+	data, ok := resBody[application]
+	if !ok {
+		return "", nil
+	}
+
+	return data.Name, nil
+}
+
 // tokenRequestResponse represents the content of the token request response body
 type tokenRequestResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
-	Error        string `json:"error"`
-	Message      string `json:"message"`
 }
 
-func (client *Client) GetAuthenticationToken(desmosAddress string, oAuthCode string) (*types.OAuthToken, error) {
+// GetAuthenticationToken implements Client
+func (client *Client) GetAuthenticationToken(oAuthCode string) (*types.ServiceAccount, error) {
 	// Build the params values
 	params := url.Values{}
 	params.Add("client_id", client.clientID)
@@ -40,6 +100,11 @@ func (client *Client) GetAuthenticationToken(desmosAddress string, oAuthCode str
 	}
 	defer res.Body.Close()
 
+	err = client.getBadRequestError(res)
+	if err != nil {
+		return nil, err
+	}
+
 	// Read the response body
 	var resBody tokenRequestResponse
 	err = json.NewDecoder(res.Body).Decode(&resBody)
@@ -47,20 +112,18 @@ func (client *Client) GetAuthenticationToken(desmosAddress string, oAuthCode str
 		return nil, err
 	}
 
-	if resBody.Error != "" {
-		return nil, fmt.Errorf("%s-%s", resBody.Error, resBody.Message)
-	}
+	// Get the Twitch username
 
 	// Store the token inside the database
-	return types.NewOAuthToken(
-		desmosAddress,
+	return types.NewServiceAccount(
 		client.Service(),
 		resBody.AccessToken,
 		resBody.RefreshToken,
 	), nil
 }
 
-func (client *Client) RefreshToken(token *types.OAuthToken) (*types.OAuthToken, error) {
+// RefreshToken implements Client
+func (client *Client) RefreshToken(token *types.ServiceAccount) (*types.ServiceAccount, error) {
 	//TODO implement me
 	panic("implement me")
 }

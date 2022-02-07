@@ -2,8 +2,11 @@ package oauth
 
 import (
 	"encoding/hex"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"net/http"
+
+	"github.com/cosmos/cosmos-sdk/types/tx"
+
+	"github.com/desmos-labs/plutus/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -87,10 +90,29 @@ func (h *Handler) HandleAuthenticationTokenRequest(request TokenRequest) error {
 	}
 
 	// Get the token
-	token, err := h.handler.GetAuthenticationToken(request.Platform, request.DesmosAddress, request.OAuthCode)
+	token, err := h.handler.GetAuthenticationToken(request.Platform, request.OAuthCode)
 	if err != nil {
 		return err
 	}
+
+	var applications []*types.ApplicationAccount
+	for _, application := range types.SupportedApps {
+		// Get the application username
+		username, err := h.handler.GetApplicationUsername(request.Platform, application, token)
+		if err != nil {
+			return err
+		}
+
+		if username == "" {
+			// Skip if the username was not found
+			continue
+		}
+
+		// Build the application object
+		applications = append(applications, types.NewApplicationAccount(application, username))
+	}
+
+	// TODO: 1- Store the user, 2- Store the OAuth token, 3- Store the applications
 
 	// Store the token in the database
 	return h.db.SaveOAuthToken(token)

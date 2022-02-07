@@ -1,22 +1,39 @@
 package types
 
-const (
-	ServiceStreamlabs     = "streamlabs"
-	ServiceStreamElements = "streamelements"
-)
-
-type OAuthToken struct {
+// User contains the data about an application user
+type User struct {
 	DesmosAddress string
-	Service       string
-	AccessToken   string
-	RefreshToken  string
 }
 
-func NewOAuthToken(desmosAddress, service, accessToken, refreshToken string) *OAuthToken {
-	return &OAuthToken{
-		Service:       service,
+func NewUser(desmosAddress string) *User {
+	return &User{
 		DesmosAddress: desmosAddress,
-		AccessToken:   accessToken,
-		RefreshToken:  refreshToken,
+	}
+}
+
+type ServiceAccount struct {
+	UserID       uint64
+	Service      string
+	AccessToken  string
+	RefreshToken string
+}
+
+func NewServiceAccount(service, accessToken, refreshToken string) *ServiceAccount {
+	return &ServiceAccount{
+		Service:      service,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+}
+
+type ApplicationAccount struct {
+	Application string
+	Username    string
+}
+
+func NewApplicationAccount(application, username string) *ApplicationAccount {
+	return &ApplicationAccount{
+		Application: application,
+		Username:    username,
 	}
 }

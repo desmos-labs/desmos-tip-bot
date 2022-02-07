@@ -31,18 +31,29 @@ func (h *OAuthHandler) Service() string {
 }
 
 // GetAuthenticationToken implements oauth.Client
-func (h *OAuthHandler) GetAuthenticationToken(service, desmosAddress, oAuthCode string) (*types.OAuthToken, error) {
+func (h *OAuthHandler) GetAuthenticationToken(service, oAuthCode string) (*types.ServiceAccount, error) {
 	for _, c := range h.clients {
 		if strings.EqualFold(c.Service(), service) {
-			return c.GetAuthenticationToken(desmosAddress, oAuthCode)
+			return c.GetAuthenticationToken(oAuthCode)
 		}
 	}
 
 	return nil, fmt.Errorf("invalid service type: %s", service)
 }
 
+// GetApplicationUsername implements oauth.Client
+func (h *OAuthHandler) GetApplicationUsername(service, application string, token *types.ServiceAccount) (string, error) {
+	for _, c := range h.clients {
+		if strings.EqualFold(c.Service(), service) {
+			return c.GetApplicationUsername(application, token)
+		}
+	}
+
+	return "", nil
+}
+
 // RefreshToken implements oauth.Client
-func (h *OAuthHandler) RefreshToken(token *types.OAuthToken) (*types.OAuthToken, error) {
+func (h *OAuthHandler) RefreshToken(token *types.ServiceAccount) (*types.ServiceAccount, error) {
 	for _, c := range h.clients {
 		if strings.EqualFold(c.Service(), token.Service) {
 			return c.RefreshToken(token)
