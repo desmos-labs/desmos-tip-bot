@@ -11,10 +11,6 @@ const (
 
 var (
 	DesmosTipRegEx = regexp.MustCompile("^@desmostipbot tip [0-9]+ \\S*")
-	SupportedApps  = []string{
-		AppTwitch,
-		// TODO: Allow different applications as well (eg. YouTube, etc)
-	}
 )
 
 func TipSentMessage(txHash string) string {

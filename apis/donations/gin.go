@@ -18,10 +18,10 @@ type DonationRequest struct {
 	DonationMessage string `json:"donation_message"`
 
 	// RecipientApplication is where the donation was made (Twitch, Twitter, etc)
-	RecipientApplication string `json:"application"`
+	RecipientApplication string `json:"recipient_application"`
 
 	// RecipientUsername is the recipient on the above specified application
-	RecipientUsername string `json:"username"`
+	RecipientUsername string `json:"recipient_username"`
 
 	// TxHash is the transaction hash used for the donation
 	TxHash string `json:"tx_hash"`

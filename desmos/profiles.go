@@ -14,6 +14,24 @@ import (
 	apiutils "github.com/desmos-labs/plutus/apis/utils"
 )
 
+// GetDesmosProfile returns the Desmos profile associated with the given Desmos address
+func (client *Client) GetDesmosProfile(desmosAddress string) (*profilestypes.Profile, error) {
+	res, err := client.profilesClient.Profile(context.Background(), &profilestypes.QueryProfileRequest{
+		User: desmosAddress,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var profile *profilestypes.Profile
+	err = client.cdc.UnpackAny(res.Profile, &profile)
+	if err != nil {
+		return nil, err
+	}
+
+	return profile, nil
+}
+
 // SearchDesmosAddress searches the Desmos address given a specific application and username.
 // If the application is "desmos", then the provided username will be treated as a DTag.
 // Otherwise, the GraphQL client will be used to search for an application link with the specified

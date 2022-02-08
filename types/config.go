@@ -33,6 +33,14 @@ type Config struct {
 	Database     *DatabaseConfig                  `yaml:"database"`
 	APIs         *APIsConfig                      `yaml:"apis"`
 	Integrations *IntegrationsConfig              `yaml:"integrations"`
+	Donations    *DonationsConfig                 `yaml:"donations"`
+}
+
+type DonationsConfig struct {
+	SupportedApps   []string `yaml:"supported_apps"`
+	SupportedDenoms map[string]struct {
+		CoinGeckoID string `yaml:"coin_gecko_id"`
+	} `yaml:"supported_denoms"`
 }
 
 type ChainConfig struct {
@@ -50,6 +58,11 @@ type APIsConfig struct {
 	Port uint64 `yaml:"port"`
 }
 
+// DatabaseConfig contains the configuration data to connect to a PostgreSQL database
+type DatabaseConfig struct {
+	URI string `yaml:"uri"`
+}
+
 // IntegrationsConfig contains the configuration for the various integrations
 type IntegrationsConfig struct {
 	Streamlabs *StreamlabsConfig `yaml:"streamlabs"`
@@ -61,11 +74,6 @@ type StreamlabsConfig struct {
 	ClientID     string `yaml:"client_id"`
 	ClientSecret string `yaml:"client_secret"`
 	RedirectURI  string `yaml:"redirect_uri"`
-}
-
-// DatabaseConfig contains the configuration data to connect to a PostgreSQL database
-type DatabaseConfig struct {
-	URI string `yaml:"uri"`
 }
 
 // TwitterConfig contains all the data used to configure the Twitter integration

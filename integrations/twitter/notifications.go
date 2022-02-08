@@ -8,7 +8,7 @@ import (
 var _ notifications.Client = &Client{}
 
 // HandledPlatform implements notifications.Client
-func (client *Client) HandledPlatform() string {
+func (client *Client) App() string {
 	return "twitter"
 }
 

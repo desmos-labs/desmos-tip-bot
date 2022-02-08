@@ -19,14 +19,16 @@ import (
 
 // Handler represents the class that allows to handle various requests
 type Handler struct {
+	cfg     *types.DonationsConfig
 	db      *database.Database
 	cdc     codec.Codec
 	handler *handler.OAuthHandler
 }
 
 // NewHandler returns a new Handler instance
-func NewHandler(handler *handler.OAuthHandler, cdc codec.Codec, db *database.Database) *Handler {
+func NewHandler(cfg *types.DonationsConfig, handler *handler.OAuthHandler, cdc codec.Codec, db *database.Database) *Handler {
 	return &Handler{
+		cfg:     cfg,
 		db:      db,
 		cdc:     cdc,
 		handler: handler,
@@ -58,6 +60,44 @@ func (h *Handler) HandleAuthenticationTokenRequest(request TokenRequest) error {
 	}
 
 	// Verify the signature
+	err = h.verifySignature(request, pubkey)
+	if err != nil {
+		return err
+	}
+
+	// Get the user account
+	user := types.NewUser(request.DesmosAddress)
+
+	// Get the service account
+	serviceAccount, err := h.handler.GetServiceAccount(request.Platform, request.OAuthCode)
+	if err != nil {
+		return err
+	}
+
+	// Get all the application accounts
+	var applications []*types.ApplicationAccount
+	for _, application := range h.cfg.SupportedApps {
+		// Get the application username
+		username, err := h.handler.GetApplicationUsername(request.Platform, application, serviceAccount)
+		if err != nil {
+			return err
+		}
+
+		if username == "" {
+			// Skip if the username was not found
+			continue
+		}
+
+		// Build the application object
+		applications = append(applications, types.NewApplicationAccount(application, username))
+	}
+
+	// Store the token in the database
+	return h.db.SaveUserData(user, serviceAccount, applications)
+}
+
+// verifySignature verifies the given request signature is valid against the given pubkey
+func (h *Handler) verifySignature(request TokenRequest, pubkey cryptotypes.PubKey) error {
 	msgBz, err := hex.DecodeString(request.SignedBytes)
 	if err != nil {
 		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signed bytes encoding")
@@ -89,33 +129,5 @@ func (h *Handler) HandleAuthenticationTokenRequest(request TokenRequest) error {
 		return apiutils.WrapErr(http.StatusBadRequest, "Signed memo must be equals to OAuth code")
 	}
 
-	// Get the user account
-	user := types.NewUser(request.DesmosAddress)
-
-	// Get the service account
-	serviceAccount, err := h.handler.GetServiceAccount(request.Platform, request.OAuthCode)
-	if err != nil {
-		return err
-	}
-
-	// Get all the application accounts
-	var applications []*types.ApplicationAccount
-	for _, application := range types.SupportedApps {
-		// Get the application username
-		username, err := h.handler.GetApplicationUsername(request.Platform, application, serviceAccount)
-		if err != nil {
-			return err
-		}
-
-		if username == "" {
-			// Skip if the username was not found
-			continue
-		}
-
-		// Build the application object
-		applications = append(applications, types.NewApplicationAccount(application, username))
-	}
-
-	// Store the token in the database
-	return h.db.SaveUserData(user, serviceAccount, applications)
+	return nil
 }

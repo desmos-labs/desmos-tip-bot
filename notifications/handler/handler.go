@@ -24,15 +24,15 @@ func (n *NotificationsHandler) RegisterClient(client notifications.Client) *Noti
 	return n
 }
 
-// HandledPlatform implements notifications.Client
-func (n *NotificationsHandler) HandledPlatform() string {
+// App implements notifications.Client
+func (n *NotificationsHandler) App() string {
 	return "none"
 }
 
 // SendNotification implements notifications.Client
 func (n *NotificationsHandler) SendNotification(data *types.Notification) error {
 	for _, client := range n.clients {
-		if strings.EqualFold(client.HandledPlatform(), data.RecipientAppAccount.Application) {
+		if strings.EqualFold(client.App(), data.RecipientAppAccount.Application) {
 			err := client.SendNotification(data)
 			if err != nil {
 				return err

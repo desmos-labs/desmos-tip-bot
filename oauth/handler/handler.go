@@ -56,7 +56,7 @@ func (h *OAuthHandler) GetApplicationUsername(service, application string, token
 func (h *OAuthHandler) RefreshToken(token *types.ServiceAccount) (*types.ServiceAccount, error) {
 	for _, c := range h.clients {
 		if strings.EqualFold(c.Service(), token.Service) {
-			return c.RefreshToken(token)
+			return c.RefreshAccount(token)
 		}
 	}
 

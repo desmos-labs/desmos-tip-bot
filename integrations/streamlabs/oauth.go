@@ -83,7 +83,7 @@ type tokenRequestResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// GetAuthenticationToken implements Client
+// GetServiceAccount implements oauth.Client
 func (client *Client) GetServiceAccount(oAuthCode string) (*types.ServiceAccount, error) {
 	// Build the params values
 	params := url.Values{}
@@ -122,8 +122,8 @@ func (client *Client) GetServiceAccount(oAuthCode string) (*types.ServiceAccount
 	), nil
 }
 
-// RefreshToken implements Client
-func (client *Client) RefreshToken(token *types.ServiceAccount) (*types.ServiceAccount, error) {
+// RefreshAccount implements oauth.Client
+func (client *Client) RefreshAccount(account *types.ServiceAccount) (*types.ServiceAccount, error) {
 	//TODO implement me
 	panic("implement me")
 }

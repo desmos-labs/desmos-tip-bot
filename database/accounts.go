@@ -7,21 +7,25 @@ import (
 	"github.com/desmos-labs/plutus/types"
 )
 
+func (db *Database) storeUSer(user *types.User) (uint64, error) {
+	// Insert the user account
+	var userID uint64
+	stmt := `INSERT INTO user_account (desmos_address) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id`
+	return userID, db.sql.QueryRow(stmt, user.DesmosAddress).Scan(&userID)
+}
+
 // SaveUserData allows to store the given user data
 func (db *Database) SaveUserData(
 	user *types.User, serviceAccount *types.ServiceAccount, applications []*types.ApplicationAccount,
 ) error {
-	// Insert the user account
-	var userID uint64
-	stmt := `INSERT INTO user_account (desmos_address) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id`
-	err := db.sql.QueryRow(stmt, user.DesmosAddress).Scan(&userID)
+	userID, err := db.storeUSer(user)
 	if err != nil {
 		return err
 	}
 
 	// Insert the service account
 	var serviceID uint64
-	stmt = `
+	stmt := `
 INSERT INTO service_account (user_id, service, access_token, refresh_token, creation_time)
 VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT ON CONSTRAINT unique_service_account DO UPDATE 
@@ -62,25 +66,30 @@ type serviceAccountRow struct {
 	CreationTime time.Time `db:"creation_time"`
 }
 
-// GetServiceAccounts returns the accounts associated with the given Desmos address
-func (db *Database) GetServiceAccounts(desmosAddress string) ([]*types.ServiceAccount, error) {
+// GetServiceAccount returns the service associated with the given Desmos address for the provided service
+func (db *Database) GetServiceAccount(service string, appAccount *types.ApplicationAccount) (*types.ServiceAccount, error) {
 	stmt := `
 SELECT service_account.* 
-FROM service_account JOIN user_account on user_account.id = service_account.user_id
-WHERE user_account.desmos_address = $1`
+FROM service_account JOIN application_account on service_account.id = application_account.service_account_id
+WHERE application_account.application ILIKE $1 
+  AND application_account.username ILIKE $2
+  AND service_account.service = $3`
 
 	var rows []serviceAccountRow
-	err := db.sql.Select(&rows, stmt, desmosAddress)
+	err := db.sql.Select(&rows, stmt, appAccount.Application, appAccount.Username, service)
 	if err != nil {
 		return nil, err
 	}
 
-	accounts := make([]*types.ServiceAccount, len(rows))
-	for i, row := range rows {
-		accounts[i] = types.NewServiceAccount(row.Service, row.AccessToken, row.RefreshToken)
+	if len(rows) == 0 {
+		return nil, nil
 	}
 
-	return accounts, nil
+	if len(rows) > 1 {
+		return nil, fmt.Errorf("multiple accounts for service %s", service)
+	}
+
+	return types.NewServiceAccount(rows[0].Service, rows[0].AccessToken, rows[0].RefreshToken), nil
 }
 
 // --------------------------------------------------------------------------------------------------------------------

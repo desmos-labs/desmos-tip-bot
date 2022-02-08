@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -43,10 +44,16 @@ func (client *Client) GetDonationDetails(txHash string) (*types.DonationTx, erro
 			"Transaction cannot have multiple send messages inside. Required 1, found %d", len(sendMsgs)))
 	}
 
+	timestamp, err := time.Parse(time.RFC3339, res.TxResponse.Timestamp)
+	if err != nil {
+		return nil, err
+	}
+
 	return types.NewDonationTx(
 		res.TxResponse.TxHash,
 		sendMsgs[0].FromAddress,
 		sendMsgs[0].ToAddress,
 		sendMsgs[0].Amount,
+		timestamp,
 	), nil
 }

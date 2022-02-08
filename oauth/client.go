@@ -7,7 +7,7 @@ type Client interface {
 	// Service returns the service that this client refers to
 	Service() string
 
-	// GetAuthenticationToken allows to get the first authorization token associated with
+	// GetServiceAccount allows to get the first service account associated with
 	// the provided OAuth code
 	GetServiceAccount(oAuthCode string) (*types.ServiceAccount, error)
 
@@ -15,6 +15,6 @@ type Client interface {
 	// the user with the provided token
 	GetApplicationUsername(application string, token *types.ServiceAccount) (string, error)
 
-	// RefreshToken allows to refresh the given token by returning a new one
-	RefreshToken(token *types.ServiceAccount) (*types.ServiceAccount, error)
+	// RefreshAccount allows to refresh the given service account by returning a new one
+	RefreshAccount(token *types.ServiceAccount) (*types.ServiceAccount, error)
 }

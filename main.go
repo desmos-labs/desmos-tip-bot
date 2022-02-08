@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/desmos-labs/plutus/coingecko"
 	"log"
 	"os"
 	"os/signal"
@@ -56,8 +57,9 @@ func main() {
 	}
 
 	// Build the Desmos client
+	coingeckoClient := coingecko.NewClient(cfg.Donations)
 	desmosClient := desmos.NewDesmosClient(cfg.Chain.DesmosClientConfig, wallet, db)
-	streamlabsClient := streamlabsclient.NewClient(cfg.Integrations.Streamlabs, db)
+	streamlabsClient := streamlabsclient.NewClient(cfg.Integrations.Streamlabs, coingeckoClient, db)
 	twitterClient := twitter.NewClient(cfg.Integrations.Twitter)
 
 	oAuthHandler := oauthhandler.NewHandler().
@@ -77,8 +79,8 @@ func main() {
 	r.Use(cors.New(ginCfg))
 
 	// Register the handlers
-	donations.RegisterHandlers(r, donations.NewHandler(desmosClient, notificationsHandler))
-	oauth.RegisterHandlers(r, oauth.NewHandler(oAuthHandler, cdc, db))
+	donations.RegisterHandlers(r, donations.NewHandler(desmosClient, notificationsHandler, db))
+	oauth.RegisterHandlers(r, oauth.NewHandler(cfg.Donations, oAuthHandler, cdc, db))
 
 	// Run the server
 	port := cfg.APIs.Port

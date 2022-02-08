@@ -3,6 +3,8 @@ package streamlabs
 import (
 	"net/http"
 
+	"github.com/desmos-labs/plutus/coingecko"
+
 	"github.com/desmos-labs/plutus/database"
 	"github.com/desmos-labs/plutus/types"
 )
@@ -13,17 +15,19 @@ type Client struct {
 	clientSecret string
 	redirectURI  string
 
-	http *http.Client
-	db   *database.Database
+	http      *http.Client
+	coingecko *coingecko.Client
+	db        *database.Database
 }
 
 // NewClient returns a new Client instance
-func NewClient(cfg *types.StreamlabsConfig, db *database.Database) *Client {
+func NewClient(cfg *types.StreamlabsConfig, coingecko *coingecko.Client, db *database.Database) *Client {
 	return &Client{
 		clientID:     cfg.ClientID,
 		clientSecret: cfg.ClientSecret,
 		redirectURI:  cfg.RedirectURI,
 		http:         &http.Client{},
+		coingecko:    coingecko,
 		db:           db,
 	}
 }

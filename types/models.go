@@ -1,6 +1,10 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // User contains the data about an application user
 type User struct {
@@ -11,6 +15,24 @@ func NewUser(desmosAddress string) *User {
 	return &User{
 		DesmosAddress: desmosAddress,
 	}
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+type UserPreferences struct {
+	Currency string
+}
+
+func NewUserPreferences(currency string) *UserPreferences {
+	return &UserPreferences{
+		Currency: currency,
+	}
+}
+
+func DefaultPreferences() *UserPreferences {
+	return NewUserPreferences(
+		"usd",
+	)
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -50,13 +72,15 @@ type DonationTx struct {
 	SenderAddress    string
 	RecipientAddress string
 	Amount           sdk.Coins
+	Timestamp        time.Time
 }
 
-func NewDonationTx(hash, senderAddress, recipientAddress string, amount sdk.Coins) *DonationTx {
+func NewDonationTx(hash, senderAddress, recipientAddress string, amount sdk.Coins, timestamp time.Time) *DonationTx {
 	return &DonationTx{
 		Hash:             hash,
 		SenderAddress:    senderAddress,
 		RecipientAddress: recipientAddress,
 		Amount:           amount,
+		Timestamp:        timestamp,
 	}
 }
