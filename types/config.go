@@ -78,6 +78,7 @@ type StreamlabsConfig struct {
 
 // TwitterConfig contains all the data used to configure the Twitter integration
 type TwitterConfig struct {
+	Enabled        bool   `yaml:"enabled"`
 	ConsumerKey    string `yaml:"consumer_key"`
 	ConsumerSecret string `yaml:"consumer_secret"`
 	AccessToken    string `yaml:"access_token"`

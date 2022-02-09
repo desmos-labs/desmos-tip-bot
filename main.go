@@ -90,9 +90,11 @@ func main() {
 	_ = r.Run(fmt.Sprintf(":%d", port))
 
 	// Setup the Twitter client
-	err = twitterClient.StartListening()
-	if err != nil {
-		panic(err)
+	if cfg.Integrations.Twitter.Enabled {
+		err = twitterClient.StartListening()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Listen for os signals and stop the clients
