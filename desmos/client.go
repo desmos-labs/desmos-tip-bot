@@ -37,6 +37,11 @@ func NewDesmosClient(cfg *types.DesmosClientConfig, cosmosClient *cosmoswallet.W
 	}
 }
 
+// GetAddress returns the wallet address associated to this client
+func (client *Client) GetAddress() string {
+	return client.cosmosClient.AccAddress()
+}
+
 // ParseAddress parses the given address as a sdk.AccAddress instance
 func (client *Client) ParseAddress(address string) (sdk.AccAddress, error) {
 	return client.cosmosClient.Client.ParseAddress(address)

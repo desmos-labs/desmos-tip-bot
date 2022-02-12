@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/desmos-labs/plutus/apis/config"
 	"github.com/desmos-labs/plutus/coingecko"
 	"log"
 	"os"
@@ -79,6 +80,7 @@ func main() {
 	r.Use(cors.New(ginCfg))
 
 	// Register the handlers
+	config.RegisterHandlers(r, config.NewHandler(desmosClient))
 	donations.RegisterHandlers(r, donations.NewHandler(desmosClient, notificationsHandler, db))
 	oauth.RegisterHandlers(r, oauth.NewHandler(cfg.Donations, oAuthHandler, cdc, db))
 
