@@ -92,6 +92,26 @@ WHERE application_account.application ILIKE $1
 	return types.NewServiceAccount(rows[0].Service, rows[0].AccessToken, rows[0].RefreshToken), nil
 }
 
+// GetServicesAccounts returns all the service accounts connected to the user with the given Desmos address
+func (db *Database) GetServicesAccounts(desmosAddress string) ([]*types.ServiceAccount, error) {
+	stmt := `
+SELECT service_account.* 
+FROM service_account INNER JOIN user_account ON user_account.id = service_account.user_id
+WHERE user_account.desmos_address = $1`
+	var rows []serviceAccountRow
+	err := db.sql.Select(&rows, stmt, desmosAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	accounts := make([]*types.ServiceAccount, len(rows))
+	for i, row := range rows {
+		accounts[i] = types.NewServiceAccount(row.Service, row.AccessToken, row.RefreshToken)
+	}
+
+	return accounts, nil
+}
+
 // --------------------------------------------------------------------------------------------------------------------
 
 type applicationAccountRow struct {
