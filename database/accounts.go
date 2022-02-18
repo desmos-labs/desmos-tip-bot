@@ -9,8 +9,14 @@ import (
 
 func (db *Database) storeUSer(user *types.User) (uint64, error) {
 	// Insert the user account
+	stmt := `INSERT INTO user_account (desmos_address) VALUES ($1) ON CONFLICT DO NOTHING`
+	_, err := db.sql.Exec(stmt, user.DesmosAddress)
+	if err != nil {
+		return 0, err
+	}
+
 	var userID uint64
-	stmt := `INSERT INTO user_account (desmos_address) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id`
+	stmt = `SELECT id FROM user_account WHERE desmos_address = $1`
 	return userID, db.sql.QueryRow(stmt, user.DesmosAddress).Scan(&userID)
 }
 

@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"encoding/hex"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -22,15 +23,17 @@ type Handler struct {
 	cfg     *types.DonationsConfig
 	db      *database.Database
 	cdc     codec.Codec
+	amino   *codec.LegacyAmino
 	handler *handler.OAuthHandler
 }
 
 // NewHandler returns a new Handler instance
-func NewHandler(cfg *types.DonationsConfig, handler *handler.OAuthHandler, cdc codec.Codec, db *database.Database) *Handler {
+func NewHandler(cfg *types.DonationsConfig, handler *handler.OAuthHandler, cdc codec.Codec, amino *codec.LegacyAmino, db *database.Database) *Handler {
 	return &Handler{
 		cfg:     cfg,
 		db:      db,
 		cdc:     cdc,
+		amino:   amino,
 		handler: handler,
 	}
 }
@@ -112,20 +115,49 @@ func (h *Handler) verifySignature(request TokenRequest, pubkey cryptotypes.PubKe
 		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signature")
 	}
 
+	if isValid := h.verifyDirectSignature(request, msgBz); !isValid {
+		err = h.verifyAminoSignature(request, msgBz)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// verifyDirectSignature tries verifying the request as one being signed using SIGN_MODE_DIRECT.
+// Returns true if the signature is valid, false otherwise.
+func (h *Handler) verifyDirectSignature(request TokenRequest, msgBz []byte) bool {
 	// Verify the signed value contains the OAuth code inside the memo field
 	var signDoc tx.SignDoc
-	err = h.cdc.Unmarshal(msgBz, &signDoc)
+	err := h.cdc.Unmarshal(msgBz, &signDoc)
 	if err != nil {
-		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signed value. Must be SignDoc")
+		return false
 	}
 
 	var txBody tx.TxBody
 	err = h.cdc.Unmarshal(signDoc.BodyBytes, &txBody)
 	if err != nil {
-		return apiutils.WrapErr(http.StatusBadRequest, "Invalid tx body bytes")
+		return false
 	}
 
 	if txBody.Memo != request.OAuthCode {
+		return false
+	}
+
+	return true
+}
+
+// verifyAminoSignature tries verifying the request as one being signed using SIGN_MODE_AMINO_JSON.
+// Returns an error if something is wrong, nil otherwise.
+func (h *Handler) verifyAminoSignature(request TokenRequest, msgBz []byte) error {
+	var signDoc legacytx.StdSignDoc
+	err := h.amino.UnmarshalJSON(msgBz, &signDoc)
+	if err != nil {
+		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signed value. Must be StdSignDoc or SignDoc")
+	}
+
+	if signDoc.Memo != request.OAuthCode {
 		return apiutils.WrapErr(http.StatusBadRequest, "Signed memo must be equals to OAuth code")
 	}
 
