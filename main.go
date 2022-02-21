@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/desmos-labs/plutus/apis/config"
-	"github.com/desmos-labs/plutus/apis/user"
-	"github.com/desmos-labs/plutus/coingecko"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/desmos-labs/plutus/apis/config"
+	"github.com/desmos-labs/plutus/apis/user"
+	"github.com/desmos-labs/plutus/coingecko"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	cosmosclient "github.com/desmos-labs/cosmos-go-wallet/client"
@@ -84,7 +85,7 @@ func main() {
 	config.RegisterHandlers(r, config.NewHandler(desmosClient))
 	donations.RegisterHandlers(r, donations.NewHandler(desmosClient, notificationsHandler, db))
 	oauth.RegisterHandlers(r, oauth.NewHandler(cfg.Donations, oAuthHandler, cdc, amino, db))
-	user.RegisterHandlers(r, user.NewHandler(desmosClient, cdc, db))
+	user.RegisterHandlers(r, user.NewHandler(desmosClient, cdc, amino, db))
 
 	// Run the server
 	port := cfg.APIs.Port

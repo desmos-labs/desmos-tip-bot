@@ -1,19 +1,10 @@
 package oauth
 
 import (
-	"encoding/hex"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	"net/http"
-
-	"github.com/cosmos/cosmos-sdk/types/tx"
-
 	"github.com/desmos-labs/plutus/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	apiutils "github.com/desmos-labs/plutus/apis/utils"
 	"github.com/desmos-labs/plutus/database"
 	"github.com/desmos-labs/plutus/oauth/handler"
 )
@@ -40,30 +31,8 @@ func NewHandler(cfg *types.DonationsConfig, handler *handler.OAuthHandler, cdc c
 
 // HandleAuthenticationTokenRequest allows to handle a request for an authentication token
 func (h *Handler) HandleAuthenticationTokenRequest(request TokenRequest) error {
-	// Read the public key
-	pubKeyBz, err := hex.DecodeString(request.PubKeyBytes)
-	if err != nil {
-		return apiutils.WrapErr(http.StatusBadRequest, "Invalid public key bytes encoding")
-	}
-
-	var pubkey cryptotypes.PubKey
-	err = h.cdc.UnmarshalInterface(pubKeyBz, &pubkey)
-	if err != nil {
-		return err
-	}
-
-	// Verify the public key matches the address
-	sdkAddr, err := sdk.AccAddressFromBech32(request.DesmosAddress)
-	if err != nil {
-		return err
-	}
-
-	if !sdkAddr.Equals(sdk.AccAddress(pubkey.Address())) {
-		return apiutils.WrapErr(http.StatusBadRequest, "Desmos address does not match public key")
-	}
-
-	// Verify the signature
-	err = h.verifySignature(request, pubkey)
+	// Verify the request
+	err := request.Verify(request.OAuthCode, h.cdc, h.amino)
 	if err != nil {
 		return err
 	}
@@ -97,69 +66,4 @@ func (h *Handler) HandleAuthenticationTokenRequest(request TokenRequest) error {
 
 	// Store the token in the database
 	return h.db.SaveUserData(user, serviceAccount, applications)
-}
-
-// verifySignature verifies the given request signature is valid against the given pubkey
-func (h *Handler) verifySignature(request TokenRequest, pubkey cryptotypes.PubKey) error {
-	msgBz, err := hex.DecodeString(request.SignedBytes)
-	if err != nil {
-		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signed bytes encoding")
-	}
-
-	sigBz, err := hex.DecodeString(request.SignatureBytes)
-	if err != nil {
-		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signature bytes encoding")
-	}
-
-	if !pubkey.VerifySignature(msgBz, sigBz) {
-		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signature")
-	}
-
-	if isValid := h.verifyDirectSignature(request, msgBz); !isValid {
-		err = h.verifyAminoSignature(request, msgBz)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// verifyDirectSignature tries verifying the request as one being signed using SIGN_MODE_DIRECT.
-// Returns true if the signature is valid, false otherwise.
-func (h *Handler) verifyDirectSignature(request TokenRequest, msgBz []byte) bool {
-	// Verify the signed value contains the OAuth code inside the memo field
-	var signDoc tx.SignDoc
-	err := h.cdc.Unmarshal(msgBz, &signDoc)
-	if err != nil {
-		return false
-	}
-
-	var txBody tx.TxBody
-	err = h.cdc.Unmarshal(signDoc.BodyBytes, &txBody)
-	if err != nil {
-		return false
-	}
-
-	if txBody.Memo != request.OAuthCode {
-		return false
-	}
-
-	return true
-}
-
-// verifyAminoSignature tries verifying the request as one being signed using SIGN_MODE_AMINO_JSON.
-// Returns an error if something is wrong, nil otherwise.
-func (h *Handler) verifyAminoSignature(request TokenRequest, msgBz []byte) error {
-	var signDoc legacytx.StdSignDoc
-	err := h.amino.UnmarshalJSON(msgBz, &signDoc)
-	if err != nil {
-		return apiutils.WrapErr(http.StatusBadRequest, "Invalid signed value. Must be StdSignDoc or SignDoc")
-	}
-
-	if signDoc.Memo != request.OAuthCode {
-		return apiutils.WrapErr(http.StatusBadRequest, "Signed memo must be equals to OAuth code")
-	}
-
-	return nil
 }

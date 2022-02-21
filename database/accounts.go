@@ -118,6 +118,17 @@ WHERE user_account.desmos_address = $1`
 	return accounts, nil
 }
 
+// DeleteServiceAccount removes the service account associated with the given service and Desmos address
+func (db *Database) DeleteServiceAccount(service string, desmosAddress string) error {
+	stmt := `
+DELETE FROM service_account USING user_account 
+WHERE user_account.id = service_account.user_id 
+  AND user_account.desmos_address = $1 
+  AND service_account.service ILIKE $2`
+	_, err := db.sql.Exec(stmt, desmosAddress, service)
+	return err
+}
+
 // --------------------------------------------------------------------------------------------------------------------
 
 type applicationAccountRow struct {

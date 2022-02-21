@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/desmos-labs/plutus/types"
+
 	"github.com/gin-gonic/gin"
 
 	apiutils "github.com/desmos-labs/plutus/apis/utils"
@@ -12,12 +14,9 @@ import (
 
 // TokenRequest represents the request body that must be used to get an authorization token
 type TokenRequest struct {
-	Platform       string `json:"platform"`
-	OAuthCode      string `json:"oauth_code"`
-	DesmosAddress  string `json:"desmos_address"`
-	SignedBytes    string `json:"signed_bytes"`
-	PubKeyBytes    string `json:"pubkey_bytes"`
-	SignatureBytes string `json:"signature_bytes"`
+	types.SignedRequest `json:",inline"`
+	Platform            string `json:"platform"`
+	OAuthCode           string `json:"oauth_code"`
 }
 
 // RegisterHandlers registers all the handlers related to the Streamlabs APIs

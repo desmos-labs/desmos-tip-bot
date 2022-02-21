@@ -2,6 +2,7 @@ package desmos
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 

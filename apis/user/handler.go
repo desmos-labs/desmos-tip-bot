@@ -1,32 +1,38 @@
 package user
 
 import (
+	"net/http"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	apiutils "github.com/desmos-labs/plutus/apis/utils"
 	"github.com/desmos-labs/plutus/database"
 	"github.com/desmos-labs/plutus/desmos"
 	"github.com/desmos-labs/plutus/types"
-	"net/http"
 )
 
 // Handler allows handling user-related requests.
 type Handler struct {
 	cdc    codec.Codec
+	amino  *codec.LegacyAmino
 	desmos *desmos.Client
 	db     *database.Database
 }
 
 // NewHandler returns a new Handler instance
-func NewHandler(desmos *desmos.Client, cdc codec.Codec, db *database.Database) *Handler {
+func NewHandler(desmos *desmos.Client, cdc codec.Codec, amino *codec.LegacyAmino, db *database.Database) *Handler {
 	return &Handler{
 		cdc:    cdc,
+		amino:  amino,
 		desmos: desmos,
 		db:     db,
 	}
 }
+
+// --------------------------------------------------------------------------------------------------------------------
 
 // DataResponse represents the response for a user details request
 type DataResponse struct {
@@ -91,4 +97,18 @@ func getServices(accounts []*types.ServiceAccount) []string {
 	}
 
 	return services
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+// HandleDisconnectRequest handles the given DisconnectRequest properly
+func (h *Handler) HandleDisconnectRequest(request DisconnectRequest) error {
+	// Verify the request
+	err := request.Verify(request.Platform, h.cdc, h.amino)
+	if err != nil {
+		return err
+	}
+
+	// Delete the service account
+	return h.db.DeleteServiceAccount(request.Platform, request.DesmosAddress)
 }
